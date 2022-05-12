@@ -6,6 +6,8 @@ import pandas as pd
 import datetime
 import warnings
 import socket
+from google.oauth2.service_account import Credentials
+import gspread
 warnings.filterwarnings('ignore')
 socket.setdefaulttimeout(180)  # 超過180秒才會報超時
 
@@ -18,7 +20,9 @@ socket.setdefaulttimeout(180)  # 超過180秒才會報超時
 
 time0 = time.time()
 month_first_day = datetime.datetime.strptime('2022-02', '%Y-%m')
-
+scope = ['https://www.googleapis.com/auth/spreadsheets']
+creds = Credentials.from_service_account_file("credentials.json", scopes=scope)
+gs = gspread.authorize(creds)
 
 class gdoc_information():
     def __init__(self):
@@ -36,20 +40,19 @@ class gdoc_information():
 
 # 異常回覆表單
 abs_gdoc = gdoc_information()
-abs_gdoc.SCOPES = ['https://docs.google.com/spreadsheets/d/10ylvlT6KzZ9kQi4-VTmx5V7FIVOJs-MaSphuLqoAA5M']
-abs_gdoc.SAMPLE_SPREADSHEET_ID = ['10ylvlT6KzZ9kQi4-VTmx5V7FIVOJs-MaSphuLqoAA5M']
-abs_gdoc.SAMPLE_RANGE_NAME = ['倉庫回報表格!A4:J']
+abs_gdoc.SCOPES = 'https://docs.google.com/spreadsheets/d/10ylvlT6KzZ9kQi4-VTmx5V7FIVOJs-MaSphuLqoAA5M'
+abs_gdoc.SAMPLE_RANGE_NAME = '倉庫回報表格'
 
-abs_raw = get_gdoc.get_google_sheet(*abs_gdoc.trans())
-abnormal_header = ['Date', '組別', 'Tracking ID', 'Inbound ID', 'SKU', 'Name', 'Quantity', 'Supplier\nID', '問題代號', '問題']
-abnormal = None
+abs_raw = gs.open_by_url(abs_gdoc.SCOPES).worksheet(abs_gdoc.SAMPLE_RANGE_NAME).get_all_values()
+header_row_idx = 0
 
-# 表頭在第三列
-if abs_raw[0] == abnormal_header:
-    abnormal = pd.DataFrame(abs_raw[1:], columns=abs_raw[0])
-# 表頭在第四列
-else:
-    abnormal = pd.DataFrame(abs_raw, columns=abnormal_header)
+while abs_raw[header_row_idx][0] != "Date":
+    header_row_idx += 1
+
+
+abnormal_header = abs_raw[header_row_idx]
+abnormal = pd.DataFrame(abs_raw[header_row_idx+1:])
+abnormal.columns = abnormal_header
 
 abnormal['Inbound ID'] = abnormal['Inbound ID'].str.upper()
 abnormal['Date'] = pd.to_datetime(abnormal['Date'], errors="coerce")
