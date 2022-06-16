@@ -42,23 +42,24 @@ class gdoc_information():
 
 # 異常回覆表單
 abs_gdoc = gdoc_information()
-abs_gdoc.SCOPES = 'https://docs.google.com/spreadsheets/d/10ylvlT6KzZ9kQi4-VTmx5V7FIVOJs-MaSphuLqoAA5M'
+abs_gdoc.SCOPES = 'https://docs.google.com/spreadsheets/d/1LlNRK3kfWjB23usJHRDaVTrX5wLfs3lFjtnn_zqDNKA'
 abs_gdoc.SAMPLE_RANGE_NAME = '倉庫回報表格'
 
 abs_raw = gs.open_by_url(abs_gdoc.SCOPES).worksheet(abs_gdoc.SAMPLE_RANGE_NAME).get_all_values()
 header_row_idx = 0
 
-while abs_raw[header_row_idx][0] != "Date":
+while abs_raw[header_row_idx][0] != "日期":
     header_row_idx += 1
 
 
 abnormal_header = abs_raw[header_row_idx]
 abnormal = pd.DataFrame(abs_raw[header_row_idx+1:])
+print(abnormal)
 abnormal.columns = abnormal_header
 
 abnormal['Inbound ID'] = abnormal['Inbound ID'].str.upper()
-abnormal['Date'] = pd.to_datetime(abnormal['Date'], errors="coerce")
-abnormal = abnormal[abnormal['Date'].dt.month == month_first_day.month]
+abnormal['日期'] = pd.to_datetime(abnormal['日期'], errors="coerce")
+abnormal = abnormal[abnormal['日期'].dt.month == month_first_day.month]
 
 # 取數錯
 abnormal_counting = abnormal[(abnormal['組別'].isin(['貼標', '質檢', '驗貨'])) &
