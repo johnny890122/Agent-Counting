@@ -19,7 +19,7 @@ socket.setdefaulttimeout(180)  # 超過180秒才會報超時
 '''
 
 time0 = time.time()
-month_first_day = datetime.datetime.strptime('2022-02', '%Y-%m')
+month_first_day = datetime.datetime.strptime('2022-05', '%Y-%m')
 scope = ['https://www.googleapis.com/auth/spreadsheets']
 creds = Credentials.from_service_account_file("credentials.json", scopes=scope)
 gs = gspread.authorize(creds)
