@@ -20,6 +20,8 @@ socket.setdefaulttimeout(180)  # 超過180秒才會報超時
 
 time0 = time.time()
 month_first_day = datetime.datetime.strptime('2022-05', '%Y-%m')
+month = month_first_day.strftime("%b")
+
 scope = ['https://www.googleapis.com/auth/spreadsheets']
 creds = Credentials.from_service_account_file("credentials.json", scopes=scope)
 gs = gspread.authorize(creds)
@@ -65,10 +67,10 @@ abnormal_counting = abnormal[(abnormal['組別'].isin(['貼標', '質檢', '驗�
 abnormal_packing = abnormal[(abnormal['組別'].isin(['貼標', '質檢', '驗貨'])) &
                             (abnormal['問題'].isin(['商品凹/破', '包裝異常']))]['Inbound ID'].values
 
-counting_raw = pd.read_csv('Input/counting_raw.csv').drop_duplicates(subset=['tracking_id'])
-counting_raw['數錯'] = np.where(counting_raw['po_inbound_id'].isin(abnormal_counting), 1, 0)
-counting_raw['沒檢查到包裝'] = np.where(counting_raw['po_inbound_id'].isin(abnormal_packing), 1, 0)
-counting_raw['Operator'] = counting_raw['counting_Start_op'].str.replace('@shopee.com', '')
+counting_raw = pd.read_csv('Input/counting_raw_{}.csv'.format(month)).drop_duplicates(subset=['tracking_id'])
+counting_raw['數錯'] = np.where(counting_raw['inbound_id'].isin(abnormal_counting), 1, 0)
+counting_raw['沒檢查到包裝'] = np.where(counting_raw['inbound_id'].isin(abnormal_packing), 1, 0)
+counting_raw['Operator'] = counting_raw['counting_start_op'].str.replace('@shopee.com', '')
 
 accuracy = counting_raw.groupby('Operator')\
                        .agg({'Operator': 'count', '數錯': np.sum, '沒檢查到包裝': np.sum})\
